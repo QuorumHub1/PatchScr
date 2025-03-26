@@ -4,7 +4,8 @@ local function CheckIsPatched()
     print("Checking if patched...")
     
     -- Проверка существования объекта в game с именем, возвращаемым ExecName
-    local execExists = game:FindFirstChild(getgenv().ExecName()) ~= nil
+    local execName = getgenv().ExecName()
+    local execExists = game:FindFirstChild(execName) ~= nil
     
     print("ExecName exists: ", execExists)
     
