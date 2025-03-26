@@ -1,10 +1,15 @@
 local Patched = nil
 
 local function CheckIsPatched()
+    print("Checking if patched...")
     local quorumExists = game:FindFirstChild("Quorum") ~= nil
     local execExists = getgenv().ExecName and type(getgenv().ExecName) == "function"
     
+    print("Quorum exists: ", quorumExists)
+    print("ExecName exists: ", execExists)
+    
     Patched = quorumExists or execExists
+    print("Patched: ", Patched)
 end
 
 CheckIsPatched()
@@ -28,18 +33,22 @@ local function XenoVFSblocker()
 end
 
 if not Patched then
+    print("Patched is false, applying patch...")
     local ThirdPartyUserService = game:GetService("ThirdPartyUserService")
     
     if ThirdPartyUserService then
+        print("ThirdPartyUserService found!")
         ThirdPartyUserService.Name = (getgenv().ExecName and type(getgenv().ExecName) == "function") and
                                      getgenv().ExecName() or "Quorum"
         XenoVFSblocker()
     else
+        print("ThirdPartyUserService not found, creating quorum part...")
         local quorum = Instance.new("Part")
         quorum.Parent = game
         quorum.Name = "Quorum"
     end
 
+    -- Define the executor-related functions
     getgenv().identifyexecutor = function()
         return (getgenv().ExecName and type(getgenv().ExecName) == "function" and
                 getgenv().ExecVer and type(getgenv().ExecVer) == "function") and
@@ -58,6 +67,7 @@ if not Patched then
 
     local uas = (getgenv().CUA and type(getgenv().CUA) == "function") and getgenv().CUA() or "Quorum/1.0.0"
 
+    -- Overriding request function to include custom User-Agent header
     local oldRequest = request
     getgenv().request = function(options)
         if options and type(options) == "table" then
@@ -68,5 +78,7 @@ if not Patched then
         end
     end
 
+    -- Mark the patch as applied
     Patched = true
+    print("Patch applied successfully.")
 end
