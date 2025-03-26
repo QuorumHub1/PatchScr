@@ -1,3 +1,4 @@
+print"hi"
 local Patched = nil
 local function CheckIsPatched()
     local execName = getgenv().ExecName()
