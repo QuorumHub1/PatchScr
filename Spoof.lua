@@ -5,9 +5,11 @@ local function CheckIsPatched()
         Patched = true
     else
         if game:FindFirstChild(execName) ~= nil then
+            print"patched"
             Patched = true
         else
             Patched = false
+            print"not patched"
         end
     end
 end
