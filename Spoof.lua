@@ -2,13 +2,14 @@ local Patched = nil
 
 local function CheckIsPatched()
     print("Checking if patched...")
-    local quorumExists = game:FindFirstChild("Quorum") ~= nil
-    local execExists = getgenv().ExecName and type(getgenv().ExecName) == "function"
     
-    print("Quorum exists: ", quorumExists)
+    -- Проверка существования объекта в game с именем, возвращаемым ExecName
+    local execExists = game:FindFirstChild(getgenv().ExecName()) ~= nil
+    
     print("ExecName exists: ", execExists)
     
-    Patched = quorumExists or execExists
+    -- Устанавливаем Patched, если объект существует
+    Patched = execExists
     print("Patched: ", Patched)
 end
 
