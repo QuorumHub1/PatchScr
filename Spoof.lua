@@ -1,86 +1,87 @@
 local Patched = nil
-
 local function CheckIsPatched()
-    print("Checking if patched...")
-    
-    -- Проверка существования объекта в game с именем, возвращаемым ExecName
     local execName = getgenv().ExecName()
-    local execExists = game:FindFirstChild(execName) ~= nil
-    
-    print("ExecName exists: ", execExists)
-    
-    -- Устанавливаем Patched, если объект существует
-    Patched = execExists
-    print("Patched: ", Patched)
+    if game:FindFirstChild("Quorum") then
+        Patched = true
+    else
+        if game:FindFirstChild(execName) ~= nil then
+            Patched = true
+        else
+            Patched = false
+        end
+    end
 end
 
 CheckIsPatched()
-
 local function XenoVFSblocker()
-    local function Spy(notification)
-        if notification then
-            local title = notification:FindFirstChild("NotificationTitle")
-            if title and title.Text == "[Xeno - VFS]" then
-                notification:Destroy()
+    local function Spy()
+        local notificationFrame = game:GetService("CoreGui").RobloxGui:FindFirstChild("NotificationFrame")
+        if notificationFrame then
+            local notification = notificationFrame:FindFirstChild("Notification")
+            if notification then
+                local notificationTitle = notification:FindFirstChild("NotificationTitle")
+                if notificationTitle and notificationTitle.Text == "[Xeno - VFS]" then
+                    notification:Destroy()
+                end
             end
         end
     end
-
-    local notificationFrame = game:GetService("CoreGui"):FindFirstChild("RobloxGui") and
-                              game.CoreGui.RobloxGui:FindFirstChild("NotificationFrame")
-
-    if notificationFrame then
-        notificationFrame.ChildAdded:Connect(Spy)
-    end
+    local connection
+    connection = game:GetService("RunService").Heartbeat:Connect(function()
+        Spy()
+    end)
 end
-
-if not Patched then
-    print("Patched is false, applying patch...")
-    local ThirdPartyUserService = game:GetService("ThirdPartyUserService")
-    
-    if ThirdPartyUserService then
-        print("ThirdPartyUserService found!")
-        ThirdPartyUserService.Name = (getgenv().ExecName and type(getgenv().ExecName) == "function") and
-                                     getgenv().ExecName() or "Quorum"
+if Patched == false then
+    if game:GetService("ThirdPartyUserService") then
+        if getgenv().ExecName and type(getgenv().ExecName) == "function" then
+            game.ThirdPartyUserService.Name = getgenv().ExecName()
+        else
+            game.ThirdPartyUserService.Name = "Quorum"
+        end
         XenoVFSblocker()
     else
-        print("ThirdPartyUserService not found, creating quorum part...")
-        local quorum = Instance.new("Part")
-        quorum.Parent = game
-        quorum.Name = "Quorum"
+        -- Not Xeno Edition, skip.
+        local Quorum = Instance.New("Part")
+        Quorum.Parent = game
+        Quorum.Name = "Quorum"
     end
-
-    -- Define the executor-related functions
     getgenv().identifyexecutor = function()
-        return (getgenv().ExecName and type(getgenv().ExecName) == "function" and
-                getgenv().ExecVer and type(getgenv().ExecVer) == "function") and
-                (getgenv().ExecName() .. getgenv().ExecVer()) or "Quorum v1.0.0"
-    end
-
-    getgenv().getexecutorname = function()
-        return (getgenv().ExecName and type(getgenv().ExecName) == "function") and
-               getgenv().ExecName() or "Quorum"
-    end
-
-    getgenv().getidentity = function()
-        return (getgenv().Level and type(getgenv().Level) == "function") and
-               getgenv().Level() or "3"
-    end
-
-    local uas = (getgenv().CUA and type(getgenv().CUA) == "function") and getgenv().CUA() or "Quorum/1.0.0"
-
-    -- Overriding request function to include custom User-Agent header
-    local oldRequest = request
-    getgenv().request = function(options)
-        if options and type(options) == "table" then
-            options.Headers = options.Headers or {}
-            options.Headers["User-Agent"] = uas
-            local success, response = pcall(oldRequest, options)
-            return success and response or nil
+        if getgenv().ExecName and type(getgenv().ExecName) == "function" and 
+           getgenv().ExecVer and type(getgenv().ExecVer) == "function" then
+            return getgenv().ExecName() .. getgenv().ExecVer()
+        else
+            return "Quorum v1.0.0"
         end
     end
-
-    -- Mark the patch as applied
+    getgenv().getexecutorname = function()
+        if getgenv().ExecName and type(getgenv().ExecName) == "function" then
+            return getgenv().ExecName()
+        else
+            return "Quorum"
+        end
+    end
+    getgenv().getidentity = function()
+        if getgenv().Level and type(getgenv().Level) == "function" then
+            return getgenv().Level()
+        else
+            return "3"
+        end
+    end
+    local uas = "Quorum/1.0.0"
+    if getgenv().CUA and type(getgenv().CUA) == "function" then
+        uas = getgenv().CUA()
+    else
+        uas = "Quorum/1.0.0"
+    end
+    local oldr = request
+    getgenv().request = function(options)
+        if options.Headers then
+            options.Headers["User-Agent"] = uas
+        else
+            options.Headers = {["User-Agent"] = uas}
+        end
+        local response = oldr(options)
+        return response
+    end
     Patched = true
-    print("Patch applied successfully.")
 end
